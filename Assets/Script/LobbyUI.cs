@@ -1,5 +1,8 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
+using DG.Tweening;
+using Photon.Pun;
 using Photon.Realtime;
 using Sirenix.OdinInspector;
 using Sirenix.Utilities;
@@ -16,10 +19,23 @@ public class LobbyUI : MonoBehaviour
         get => instance;
     }
 
-    [SerializeField] private TMP_InputField roomId;
-    [SerializeField] private Button createBtn;
+    [SerializeField] private TextMeshProUGUI helloTxt;
+    
+    [SerializeField] private TMP_InputField createRoomId;
+    [SerializeField] private TMP_InputField joinRoomId;
+    
     [SerializeField] private RoomItem roomItmPrefab;
+    private List<RoomItem> roomItmList = new List<RoomItem>();
     [SerializeField] private Transform roomItmContainer;
+
+    [SerializeField] private GameObject curRoomPanel;
+    [SerializeField] private TextMeshProUGUI curRoomName;
+    
+    [SerializeField] private PlayerItem playerItmPrefab;
+    private List<PlayerItem> playerItmList = new List<PlayerItem>();
+    [SerializeField] private Transform playerItmContainer;
+
+    [SerializeField] private GameObject startBtn;
 
     private void Awake()
     {
@@ -28,55 +44,153 @@ public class LobbyUI : MonoBehaviour
         else if (instance != this)
             Destroy(gameObject);
 
-        foreach (Transform child in roomItmContainer)
+        ClearRoomList();
+        ClearPlayerList();
+    }
+
+    private void Start()
+    {
+        LobbyManager.Instance.JoinLobby();
+    }
+
+    public void SayHelloToPlayer(string username)
+    {
+        helloTxt.gameObject.SetActive(true);
+        helloTxt.text = $"Hello {username}";
+        helloTxt.color = new Color(1f, 1f, 1f, 0f);
+        helloTxt.DOFade(1f, 1f);
+    }
+    
+    public void EnableRoomPanel(bool isActive, string roomName = null)
+    {
+        if (!isActive)
         {
-            child.gameObject.SetActive(false);
+            curRoomPanel.SetActive(false);
+            return;
         }
+        
+        curRoomPanel.SetActive(true);
+        curRoomName.text = $"Room: {roomName}";
     }
 
     public void OnClickCreateBtn()
     {
-        
+        if (createRoomId.text.IsNullOrWhitespace())
+        {
+            GlobalUI.Instance.ShowMsgLog("Invalid Room ID. Try another!");
+        }
+        else
+        {
+            LobbyManager.Instance.CreateRoom(createRoomId.text);
+        }
+    }
+    
+    public void OnClickJoinBtn()
+    {
+        if (joinRoomId.text.IsNullOrWhitespace())
+        {
+            GlobalUI.Instance.ShowMsgLog("Invalid Room ID. Try another!");
+        }
+        else
+        {
+            LobbyManager.Instance.JoinRoom(joinRoomId.text);
+        }
+    }
+
+    public void OnClickBackBtn()
+    {
+        LobbyManager.Instance.Disconnect();
+    }
+
+    public void OnClickLeaveBtn()
+    {
+        LobbyManager.Instance.LeaveRoom();
+    }
+
+    public void OnClickStartBtn()
+    {
+        PhotonNetwork.LoadLevel("Game");
     }
 
     public void UpdateRoomList(List<RoomInfo> roomList)
     {
-        
+        roomList.ForEach(room =>
+        {
+            int i = roomItmList.FindIndex(r => r.name == room.Name);
+            if (room.RemovedFromList && i != -1)
+            {
+                Destroy(roomItmList[i].gameObject);
+                roomItmList.RemoveAt(i);
+            }
+            if (!room.RemovedFromList && i == -1)
+            {
+                RoomItem newRoom = Instantiate(roomItmPrefab, roomItmContainer);
+                if (newRoom)
+                {
+                    newRoom.SetUp(room.Name);
+                    newRoom.name = room.Name;
+                    roomItmList.Add(newRoom);
+                }
+            }
+        });
     }
 
-    public void OnClickBack()
+    public void UpdatePlayerList()
     {
+        ClearPlayerList();
+
+        if (PhotonNetwork.CurrentRoom == null) return;
+
+        foreach (var player in PhotonNetwork.CurrentRoom.Players)
+        {
+            PlayerItem newPlayer = Instantiate(playerItmPrefab, playerItmContainer);
+            playerItmList.Add(newPlayer);
+            newPlayer.name = player.Value.NickName;
+            newPlayer.SetUp(player.Value);
+            if (player.Value == PhotonNetwork.LocalPlayer)
+            {
+                newPlayer.ApplyLocalChanges();
+            }
+        }
         
+        UpdateRoomMaster();
     }
 
-    public void OnClickLeave()
+    private void UpdateRoomMaster()
     {
-        
+        if (PhotonNetwork.IsMasterClient && PhotonNetwork.CurrentRoom.PlayerCount > 1)
+        {
+            startBtn.SetActive(true);
+        }
+        else
+        {
+            startBtn.SetActive(false);
+        }
     }
 
-    [Button]
-    public void UpdateRoomList(string[] roomList, string filter = null)
+    public void ClearRoomList()
     {
+        if (roomItmList != null)
+            roomItmList.Clear();
+        else
+            roomItmList = new List<RoomItem>();
+        
         foreach (Transform child in roomItmContainer)
         {
-            child.gameObject.SetActive(false);
-            child.name = "_";
-        }
-
-        int count = 0;
-        foreach (Transform child in roomItmContainer)
-        {
-            if (count >= roomList.Length) break;
-            
-            child.gameObject.SetActive(true);
-            child.GetComponent<RoomItem>().SetUp(roomList[count]);
-            child.name = roomList[count];
-            count++;
+            Destroy(child.gameObject);
         }
     }
 
-    public void EnableCreateBtn()
+    public void ClearPlayerList()
     {
-        createBtn.gameObject.SetActive(!roomId.text.IsNullOrWhitespace());
+        if (playerItmList != null)
+            playerItmList.Clear();
+        else
+            playerItmList = new List<PlayerItem>();
+        
+        foreach (Transform child in playerItmContainer)
+        {
+            Destroy(child.gameObject);
+        }
     }
 }

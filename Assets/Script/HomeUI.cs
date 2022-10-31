@@ -1,6 +1,5 @@
 using System.Collections;
 using System.Collections.Generic;
-using Photon.Pun;
 using Sirenix.Utilities;
 using TMPro;
 using UnityEngine;
@@ -20,7 +19,6 @@ public class HomeUI : MonoBehaviour
         }
 
         loadingScreen.SetActive(true);
-        PhotonNetwork.NickName = str;
-        HomeManager.Instance.ConnectToServer();
+        HomeManager.Instance.ConnectToServer(str);
     }
 }

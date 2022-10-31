@@ -22,13 +22,22 @@ public class HomeManager : MonoBehaviourPunCallbacks
             Destroy(gameObject);
     }
 
-    public void ConnectToServer()
+    public void ConnectToServer(string username)
     {
         PhotonNetwork.ConnectUsingSettings();
+        PhotonNetwork.NickName = username;
+        PhotonNetwork.AutomaticallySyncScene = true;
     }
+
+    #region Override Methods
 
     public override void OnConnectedToMaster()
     {
         SceneManager.LoadScene("Lobby");
+        Debug.Log($"Photon:: connected to master with username '{PhotonNetwork.NickName}'");
     }
+
+    #endregion
+
+    
 }

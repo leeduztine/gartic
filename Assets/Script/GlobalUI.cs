@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using DG.Tweening;
+using Photon.Pun;
 using Sirenix.OdinInspector;
 using TMPro;
 using UnityEngine;
@@ -19,7 +20,7 @@ public class GlobalUI : MonoBehaviour
     [SerializeField] private TextMeshProUGUI fpsTxt;
     [SerializeField] private TextMeshProUGUI pingTxt;
     private float delta;
-    private float delay = 1f;
+    private float delay = 0f;
 
     private void Awake()
     {
@@ -33,14 +34,21 @@ public class GlobalUI : MonoBehaviour
     
     void Update ()
     {
+        int Clamp(int n)
+        {
+            return Mathf.Clamp(n, 0, 999);
+        }
+        
         delay -= Time.deltaTime;
         
         if (delay <= 0)
         {
             delta += (Time.deltaTime - delta) * 0.1f;
             float fps = 1.0f / delta;
-            fpsTxt.text = $"{(int)fps} fps";
+            fpsTxt.text = $"{Clamp((int)fps)} fps";
             delay = 1f;
+
+            pingTxt.text = $"{Clamp((int)PhotonNetwork.GetPing())} ms";
         }
     }
 

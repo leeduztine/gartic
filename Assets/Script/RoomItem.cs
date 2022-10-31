@@ -15,7 +15,7 @@ public class RoomItem : MonoBehaviour
         btn.onClick.RemoveAllListeners();
         btn.onClick.AddListener(() =>
         {
-            
+            LobbyManager.Instance.JoinRoom(roomName.text);
         });
     }
 
