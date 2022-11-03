@@ -16,7 +16,7 @@ public class PlayerItem : MonoBehaviourPunCallbacks
     [SerializeField] private TextMeshProUGUI playerName;
 
     private int curAvt = 0;
-    private int maxAvt = 0;
+    private int lastAvt = 0;
 
     [SerializeField] private Image bg;
     [SerializeField] private Color highlightColor;
@@ -26,7 +26,7 @@ public class PlayerItem : MonoBehaviourPunCallbacks
 
     private void Awake()
     {
-        maxAvt = Utility.Instance.GetAvatarNum() - 1;
+        lastAvt = Utility.Instance.GetAvatarNum() - 1;
     }
 
     public void SetUp(Player targetPlayer)
@@ -56,7 +56,7 @@ public class PlayerItem : MonoBehaviourPunCallbacks
         
         curAvt--;
         if (curAvt < 0)
-            curAvt = maxAvt;
+            curAvt = lastAvt;
 
         playerProperties["avatar"] = curAvt;
         PhotonNetwork.SetPlayerCustomProperties(playerProperties);
@@ -67,7 +67,7 @@ public class PlayerItem : MonoBehaviourPunCallbacks
         curAvt = (int)playerProperties["avatar"];
         
         curAvt++;
-        if (curAvt > maxAvt)
+        if (curAvt > lastAvt)
             curAvt = 0;
         
         playerProperties["avatar"] = curAvt;

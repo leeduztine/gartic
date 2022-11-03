@@ -1,8 +1,10 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using Photon.Realtime;
 using Sirenix.OdinInspector;
 using UnityEngine;
+using Hashtable = ExitGames.Client.Photon.Hashtable;
 
 public class Utility : MonoBehaviour
 {
@@ -40,6 +42,45 @@ public class Utility : MonoBehaviour
     public int GetAvatarNum()
     {
         return avtList.Count;
+    }
+    
+    public static int ComparePlayer(Player p1, Player p2, bool compareScore)
+    {
+        if (compareScore)
+        {
+            int score1 = 0;
+            int score2 = 0;
+
+            if (p1.CustomProperties.ContainsKey("score"))
+            {
+                score1 = (int)p1.CustomProperties["score"];
+            }
+            else
+            {
+                p1.SetCustomProperties(new Hashtable { { "score", 0 } });
+            }
+
+            if (p2.CustomProperties.ContainsKey("score"))
+            {
+                score2 = (int)p2.CustomProperties["score"];
+            }
+            else
+            {
+                p2.SetCustomProperties(new Hashtable { { "score", 0 } });
+            }
+
+            if (score1 > score2) return -1;
+            if (score1 < score2) return 1;
+        }
+
+        var nameComparer = String.Compare(p1.NickName, p2.NickName, StringComparison.OrdinalIgnoreCase);
+
+        return nameComparer switch
+        {
+            < 0 => -1,
+            > 0 => 1,
+            _ => 0
+        };
     }
 }
 

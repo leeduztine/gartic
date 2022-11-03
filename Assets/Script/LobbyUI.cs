@@ -158,7 +158,7 @@ public class LobbyUI : MonoBehaviour
 
     private void UpdateRoomMaster()
     {
-        if (PhotonNetwork.IsMasterClient && PhotonNetwork.CurrentRoom.PlayerCount > 1)
+        if (PhotonNetwork.IsMasterClient /*&& PhotonNetwork.CurrentRoom.PlayerCount > 1*/)
         {
             startBtn.SetActive(true);
         }
