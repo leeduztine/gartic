@@ -2,13 +2,16 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using DG.Tweening;
 using Photon.Pun;
 using Photon.Realtime;
 using Sirenix.OdinInspector;
+using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 using Hashtable = ExitGames.Client.Photon.Hashtable;
 
-public class GameManager : MonoBehaviour
+public class GameManager : MonoBehaviourPunCallbacks
 {
     private static GameManager instance;
 
@@ -17,13 +20,34 @@ public class GameManager : MonoBehaviour
         get => instance;
     }
 
+    private bool isFinalTurn = false;
+
+    public bool IsFinalTurn
+    {
+        get => isFinalTurn;
+    }
+
+    // player manager
     [SerializeField] private Transform playerInGameContainer;
     private List<PlayerInGame> playerItmList = new List<PlayerInGame>();
     private List<Player> turnQueue = new List<Player>();
     private int curTurn = -1;
     private int lastTurn = 0;
 
-    private string curKeyWord;
+    private float timeLeft;
+
+    private KeyWordModel curKeyWord = DynamicData.nullKeyWord;
+
+    public KeyWordModel CurKeyWord
+    {
+        get => curKeyWord;
+    }
+
+    private int turnCount = 0;
+    private int turnLimit;
+
+    
+
 
     private void Awake()
     {
@@ -31,17 +55,89 @@ public class GameManager : MonoBehaviour
             instance = this;
         else if (instance != this)
             Destroy(gameObject);
-
+        
+        // clear player list before setup
         foreach (Transform child in playerInGameContainer)
         {
             playerItmList.Add(child.GetComponent<PlayerInGame>());
         }
         
-        UpdatePlayerList();
+
+        // setup
+        SyncPlayerList();
+        turnLimit = turnQueue.Count * Config.PhaseLimit;
+        GameUI.Instance.SetUpIntro();
     }
 
+    private void Update()
+    {
+        if (timeLeft > 0)
+        {
+            timeLeft -= Time.deltaTime;
+        }
+    }
+
+
+    
+    
+    
+    
+    
+    
+    // ------------------ turn-flow management -------------------------
     [Button]
-    public void UpdatePlayerList()
+    public void NextTurn()
+    {
+        if (!PhotonNetwork.IsMasterClient) return;
+        
+        SetKeyWord(DynamicData.nullKeyWord.word);
+        
+        if (PhotonNetwork.CurrentRoom.CustomProperties.ContainsKey("turn"))
+        {
+            curTurn = (int)PhotonNetwork.CurrentRoom.CustomProperties["turn"];
+        }
+        
+        curTurn++;
+        if (curTurn > lastTurn) curTurn = 0;
+        PhotonNetwork.CurrentRoom.SetCustomProperties(new Hashtable { {"turn", curTurn} });
+
+        if (PhotonNetwork.CurrentRoom.CustomProperties.ContainsKey("turnCount"))
+        {
+            turnCount = (int)PhotonNetwork.CurrentRoom.CustomProperties["turnCount"];
+        }
+
+        turnCount++;
+        PhotonNetwork.CurrentRoom.SetCustomProperties(new Hashtable { { "turnCount", turnCount } });
+    }
+
+    public void SyncTurn()
+    {
+        curTurn = (int)PhotonNetwork.CurrentRoom.CustomProperties["turn"];
+        
+        playerItmList.ForEach(x=>x.EndTurn());
+        playerItmList.Find(x => x.GetPlayerInfo().NickName == turnQueue[curTurn].NickName)
+            .StartTurn();
+
+        if (turnQueue[curTurn].IsLocal)
+        {
+            GameUI.Instance.SetUpForDrawer();
+        }
+        else
+        {
+            GameUI.Instance.SetUpForGuesser();
+        }
+    }
+    
+    
+    
+    
+    
+    
+    
+    // ---------------------- player list management --------------------------
+    // get sorted player list on server and setup player list UI
+    [Button]
+    public void SyncPlayerList()
     {
         var list = GetSortedPlayerList();
         var playerNum = list.Count;
@@ -57,37 +153,6 @@ public class GameManager : MonoBehaviour
 
         turnQueue = GetAlphabeticalPlayerList();
         lastTurn = turnQueue.Count - 1;
-    }
-
-    public void NextTurn()
-    {
-        curTurn++;
-        if (curTurn > lastTurn) curTurn = 0;
-        
-        playerItmList.ForEach(x=>x.EndTurn());
-        playerItmList.Find(x => x.GetPlayerInfo() == turnQueue[curTurn])
-            .StartTurn();
-
-        if (turnQueue[curTurn].IsLocal)
-        {
-            GameUI.Instance.SetUpForDrawer();
-        }
-        else
-        {
-            GameUI.Instance.SetUpForGuesser();
-        }
-    }
-
-    public int GetPlayerScore(string username)
-    {
-        var list = GetRawPlayerList();
-        int score = 0;
-        var targetPlayer = list.Find(x => x.NickName == username);
-        if (targetPlayer == null) return -1; 
-        if (targetPlayer.CustomProperties.ContainsKey("score"))
-            score = (int)targetPlayer.CustomProperties["score"];
-        
-        return score;
     }
 
     private static List<Player> GetRawPlayerList()
@@ -121,7 +186,44 @@ public class GameManager : MonoBehaviour
         });
         return list;
     }
+    public Player GetPlayerHasCurTurn()
+    {
+        return turnQueue[curTurn];
+    }
 
+    
+    
+    
+    
+    
+    
+    
+    
+    // --------------------- game play management -------------------------------
+    public void SetKeyWord(string key)
+    {
+        PhotonNetwork.CurrentRoom.SetCustomProperties(new Hashtable { { "keyword", key } });
+    }
+
+    public void SyncKeyWord()
+    {
+        curKeyWord = new KeyWordModel(PhotonNetwork.CurrentRoom.CustomProperties["keyword"].ToString());
+        GameUI.Instance.SetupHint();
+        Debug.Log($"Cur keyword: {curKeyWord.word}");
+    }
+
+    public int GetPlayerScore(string username)
+    {
+        var list = GetRawPlayerList();
+        int score = 0;
+        var targetPlayer = list.Find(x => x.NickName == username);
+        if (targetPlayer == null) return -1; 
+        if (targetPlayer.CustomProperties.ContainsKey("score"))
+            score = (int)targetPlayer.CustomProperties["score"];
+        
+        return score;
+    }
+    
     [Button]
     public void BuffScore(string username, int score = 100)
     {
@@ -143,5 +245,81 @@ public class GameManager : MonoBehaviour
         });
     }
 
+    public void SyncGameStatus()
+    {
+        Debug.Log($"turn count: {(int)PhotonNetwork.CurrentRoom.CustomProperties["turnCount"]}");
+        
+        if ((int)PhotonNetwork.CurrentRoom.CustomProperties["turnCount"] >= turnLimit)
+        {
+            isFinalTurn = true;
+        }
+    }
+
+    public void SyncTimeLeft()
+    {
+        timeLeft = Config.WaitingTime + Config.SubmitTime;
+    }
+
+    public void SubmitCorrectly()
+    {
+        float scoreRate = timeLeft / Config.SubmitTime;
+        BuffScore(PhotonNetwork.LocalPlayer.NickName, (int)(Config.BaseScore * scoreRate));
+    }
+
+    public void Submit(string str)
+    {
+        if (str.ToLower() == curKeyWord.word.ToLower())
+        {
+            SubmitCorrectly();
+            GameUI.Instance.ShowCorrectAnswerNotification();
+        }
+    }
+
+    public void UpdateAnswerList(string content)
+    {
+        PhotonNetwork.CurrentRoom.SetCustomProperties(new Hashtable { { "answerList", content } });
+    }
+
+    public void SyncAnswerList()
+    {
+        GameUI.Instance.RegenerateAnswerList(PhotonNetwork.CurrentRoom.CustomProperties["answerList"].ToString());
+    }
     
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    // ----------------------- override methods ---------------------------
+
+    public override void OnRoomPropertiesUpdate(Hashtable propertiesThatChanged)
+    {
+        if (propertiesThatChanged.ContainsKey("turn"))
+        {
+            SyncTurn();
+            SyncTimeLeft();
+        }
+
+        if (propertiesThatChanged.ContainsKey("turnCount"))
+        {
+            SyncGameStatus();
+        }
+
+        if (propertiesThatChanged.ContainsKey("keyword"))
+        {
+            SyncKeyWord();
+        }
+
+        if (propertiesThatChanged.ContainsKey("answerList"))
+        {
+            SyncAnswerList();
+        }
+    }
 }

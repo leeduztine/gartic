@@ -85,6 +85,6 @@ public class PlayerInGame : MonoBehaviourPunCallbacks
     {
         Debug.Log($"properties is updated on '{targetPlayer.NickName}'");
         UpdatePlayerInGame(targetPlayer);
-        GameManager.Instance.UpdatePlayerList();
+        GameManager.Instance.SyncPlayerList();
     }
 }

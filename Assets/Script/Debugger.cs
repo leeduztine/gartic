@@ -20,20 +20,30 @@ public class Debugger : MonoBehaviour
             GameManager.Instance.BuffScore(list[1], int.Parse(list[2]));
         }
 
-        if (list[0] == "get")
+        if (list[0] == "score?")
         {
             output.text = $"player: {list[1]} score: {GameManager.Instance.GetPlayerScore(list[1])}" +
                           $"\n{output.text}";
         }
 
-        if (list[0] == "update")
+        if (list[0] == "player?")
         {
-            GameManager.Instance.UpdatePlayerList();
+            GameManager.Instance.SyncPlayerList();
         }
 
         if (list[0] == "next")
         {
             GameManager.Instance.NextTurn();
+        }
+
+        if (list[0] == "key?")
+        {
+            output.text = $"Cur keyword: {GameManager.Instance.CurKeyWord.word}";
+        }
+
+        if (list[0] == "up")
+        {
+            GameManager.Instance.SubmitCorrectly();
         }
     }
 }
