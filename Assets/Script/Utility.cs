@@ -20,6 +20,8 @@ public class Utility : MonoBehaviour
 
     private void Awake()
     {
+        Application.targetFrameRate = 60;
+        
         DontDestroyOnLoad(gameObject);
 
         if (instance == null)

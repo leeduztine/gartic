@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using DG.Tweening;
 using Photon.Pun;
+using Sirenix.Utilities;
 using TMPro;
 using Unity.Mathematics;
 using UnityEngine;
@@ -20,7 +21,7 @@ public class GameUI : MonoBehaviour
     
     [SerializeField] private TextMeshProUGUI introTimerTxt;
     
-    [SerializeField] private Image blockDrawing;
+    [SerializeField] private GameObject blockDrawing;
     [SerializeField] private GameObject readyPhaseGr;
     [SerializeField] private GameObject readySelect;
     [SerializeField] private GameObject readyWait;
@@ -28,6 +29,9 @@ public class GameUI : MonoBehaviour
     [SerializeField] private TextMeshProUGUI hintTxt;
     [SerializeField] private TMP_InputField submitInputField;
     [SerializeField] private TextMeshProUGUI answerList;
+    [SerializeField] private TextMeshProUGUI revealTxt;
+
+    [SerializeField] private LineGenerator lineGen;
     
     [SerializeField] private Button opt1;
     [SerializeField] private Button opt2;
@@ -84,14 +88,16 @@ public class GameUI : MonoBehaviour
         yield return new WaitForSeconds(1f);
         introTimerTxt.transform.parent.gameObject.SetActive(false);
         
-        GameManager.Instance.NextTurn();
+        if (PhotonNetwork.IsMasterClient)
+            GameManager.Instance.NextTurn();
     }
 
     public void SetUpForDrawer()
     {
         ClearAnswerList();
+        revealTxt.gameObject.SetActive(false);
         
-        blockDrawing.gameObject.SetActive(false);
+        blockDrawing.SetActive(false);
         readyPhaseGr.SetActive(true);
         submitInputField.gameObject.SetActive(false);
         
@@ -113,10 +119,17 @@ public class GameUI : MonoBehaviour
             
             TimerCountDown(Config.SubmitTime, () =>
             {
-                if (!GameManager.Instance.IsFinalTurn)
+                lineGen.RpcClear();
+                RevealKeyWord();
+                blockDrawing.SetActive(true);
+                
+                TimerCountDown(Config.RelaxTime, () =>
                 {
-                    GameManager.Instance.NextTurn();
-                }
+                    if (!GameManager.Instance.IsFinalTurn)
+                    {
+                        GameManager.Instance.NextTurn();
+                    }
+                });
             });
         });
     }
@@ -124,8 +137,9 @@ public class GameUI : MonoBehaviour
     public void SetUpForGuesser()
     {
         ClearAnswerList();
+        revealTxt.gameObject.SetActive(false);
         
-        blockDrawing.gameObject.SetActive(true);
+        blockDrawing.SetActive(true);
         readyPhaseGr.SetActive(true);
         submitInputField.gameObject.SetActive(false);
         
@@ -141,10 +155,17 @@ public class GameUI : MonoBehaviour
             
             TimerCountDown(Config.SubmitTime, () =>
             {
-                if (!GameManager.Instance.IsFinalTurn)
+                lineGen.RpcClear();
+                RevealKeyWord();
+                blockDrawing.SetActive(true);
+                
+                TimerCountDown(Config.RelaxTime, () =>
                 {
-                    GameManager.Instance.NextTurn();
-                }
+                    if (!GameManager.Instance.IsFinalTurn)
+                    {
+                        GameManager.Instance.NextTurn();
+                    }
+                });
             });
         });
     }
@@ -217,24 +238,40 @@ public class GameUI : MonoBehaviour
     public void RegenerateAnswerList(string content)
     {
         answerList.text = content;
-        answerList.transform.parent.parent.parent
-            .GetComponent<ScrollRect>().normalizedPosition = new Vector2(0, 0);
+        ScrollToBottom();
     }
 
     public void SubmitAnswer()
     {
         var answer = submitInputField.text;
-        var username = PhotonNetwork.LocalPlayer.NickName;
         submitInputField.text = "";
         
+        if (!answer.IsNullOrWhitespace())
+            GameManager.Instance.Submit(answer);
+    }
+
+    public void ShowWrongAnswer(string username, string answer)
+    {
         PushIntoAnswerList($"<color=#4d7796>{username} :</color> {answer}");
-        
-        GameManager.Instance.Submit(answer);
     }
 
     public void ShowCorrectAnswerNotification()
     {
         var username = PhotonNetwork.LocalPlayer.NickName;
-        PushIntoAnswerList($"<color=#64d966>Congrats {username}! Correct answer!</color>");
+        PushIntoAnswerList($"<color=#64d966>Congrats '{username}'! Correct answer!</color>");
+    }
+
+    public void RevealKeyWord()
+    {
+        revealTxt.gameObject.SetActive(true);
+        revealTxt.text = $"<color=#ff0d0d>Key word: {GameManager.Instance.CurKeyWord.word.ToUpper()}</color>";
+        // PushIntoAnswerList($"<color=#ff0d0d>Key word: {GameManager.Instance.CurKeyWord.word.ToUpper()}</color>");
+    }
+
+    private void ScrollToBottom()
+    {
+        Canvas.ForceUpdateCanvases();
+        answerList.transform.parent.parent.parent
+            .GetComponent<ScrollRect>().normalizedPosition = new Vector2(0, 0);
     }
 }

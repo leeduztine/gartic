@@ -46,6 +46,8 @@ public class GameManager : MonoBehaviourPunCallbacks
     private int turnCount = 0;
     private int turnLimit;
 
+    private PlayerRole role = PlayerRole.None;
+
     
 
 
@@ -120,10 +122,12 @@ public class GameManager : MonoBehaviourPunCallbacks
 
         if (turnQueue[curTurn].IsLocal)
         {
+            role = PlayerRole.Drawer;
             GameUI.Instance.SetUpForDrawer();
         }
         else
         {
+            role = PlayerRole.Guesser;
             GameUI.Instance.SetUpForGuesser();
         }
     }
@@ -266,12 +270,16 @@ public class GameManager : MonoBehaviourPunCallbacks
         BuffScore(PhotonNetwork.LocalPlayer.NickName, (int)(Config.BaseScore * scoreRate));
     }
 
-    public void Submit(string str)
+    public void Submit(string answer)
     {
-        if (str.ToLower() == curKeyWord.word.ToLower())
+        if (answer.ToLower() == curKeyWord.word.ToLower() && role != PlayerRole.Drawer)
         {
             SubmitCorrectly();
             GameUI.Instance.ShowCorrectAnswerNotification();
+        }
+        else
+        {
+            GameUI.Instance.ShowWrongAnswer(PhotonNetwork.LocalPlayer.NickName, answer);
         }
     }
 
@@ -322,4 +330,19 @@ public class GameManager : MonoBehaviourPunCallbacks
             SyncAnswerList();
         }
     }
+    
+    public override void OnPlayerEnteredRoom(Player newPlayer)
+    {
+        SyncPlayerList();
+    }
+
+    public override void OnPlayerLeftRoom(Player otherPlayer)
+    {
+        SyncPlayerList();
+    }
+}
+
+public enum PlayerRole
+{
+    None, Drawer, Guesser
 }
