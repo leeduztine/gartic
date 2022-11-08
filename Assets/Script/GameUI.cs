@@ -39,6 +39,9 @@ public class GameUI : MonoBehaviour
     private string remoteUserHexColor = "#4d7796";
     private string localUserHexColor = "#e1e85f";
 
+    [SerializeField] private RankItem[] rankItems;
+    [SerializeField] private GameObject rank;
+
     private void Awake()
     {
         if (instance == null)
@@ -129,6 +132,11 @@ public class GameUI : MonoBehaviour
                     {
                         GameManager.Instance.NextTurn();
                     }
+                    else
+                    {
+                        Debug.LogError("end");
+                        ShowRankPanel();
+                    }
                 });
             });
         });
@@ -164,6 +172,11 @@ public class GameUI : MonoBehaviour
                     if (!GameManager.Instance.IsFinalTurn)
                     {
                         GameManager.Instance.NextTurn();
+                    }
+                    else
+                    {
+                        Debug.LogError("end");
+                        ShowRankPanel();
                     }
                 });
             });
@@ -273,5 +286,24 @@ public class GameUI : MonoBehaviour
         Canvas.ForceUpdateCanvases();
         answerList.transform.parent.parent.parent
             .GetComponent<ScrollRect>().normalizedPosition = new Vector2(0, 0);
+    }
+
+    public void ShowRankPanel()
+    {
+        rank.SetActive(true);
+        var list = GameManager.Instance.GetSortedPlayerList();
+        Debug.Log(list.Count);
+        for (int i = 0; i < 3; i++)
+        {
+            if (i < list.Count)
+            {
+                rankItems[i].gameObject.SetActive(true);
+                rankItems[i].SetUp(list[i]);
+            }
+            else
+            {
+                rankItems[i].gameObject.SetActive(false);
+            }
+        }
     }
 }

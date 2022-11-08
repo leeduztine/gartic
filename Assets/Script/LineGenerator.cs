@@ -7,53 +7,42 @@ using Sirenix.OdinInspector;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
-public class LineGenerator : MonoBehaviourPun, IPointerUpHandler, IPointerDownHandler
+public class LineGenerator : MonoBehaviourPun, IPointerUpHandler, IPointerDownHandler, IDragHandler
 {
     [SerializeField] private Line linePrefab;
 
     private Line activeLine;
 
+    private Vector3 nullPoint = new Vector3(-999f, -999f, 0f);
+    private Vector3 point;
+
+    private void Start()
+    {
+        point = nullPoint;
+    }
+
     private void Update()
     {
         if (activeLine)
         {
-            // DrawLine();
-            Vector2 mousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-            RpcDrawLine(mousePos);
+            if (point != nullPoint)
+                DrawLine(point);
         }
 
-        if (Input.GetKeyDown(KeyCode.LeftControl) && Input.GetKeyDown(KeyCode.Z))
+        if (Input.GetKeyDown(KeyCode.LeftControl) 
+            && Input.GetKeyDown(KeyCode.Z) 
+            && GameManager.Instance.Role == PlayerRole.Drawer)
         {
-            // Undo();
             RpcUndo();
         }
     }
+    
+    
 
-    public void RpcDrawLine(Vector3 mouserPos)
+    public void RpcDrawLine(Vector3 mousePos)
     {
-        photonView.RPC("DrawLine",RpcTarget.All,mouserPos);   
+        photonView.RPC("DrawLine",RpcTarget.All,mousePos);
     }
-
-    public void RpcClear()
-    {
-        photonView.RPC("Clear",RpcTarget.All);
-    }
-
-    public void RpcUndo()
-    {
-        photonView.RPC("Undo",RpcTarget.All);
-    }
-
-    public void RpcStartLine()
-    {
-        photonView.RPC("StartLine",RpcTarget.All);
-    }
-
-    public void RpcEndLine()
-    {
-        photonView.RPC("EndLine",RpcTarget.All);
-    }
-
     [PunRPC]
     public void DrawLine(Vector3 mousePos)
     {
@@ -61,17 +50,29 @@ public class LineGenerator : MonoBehaviourPun, IPointerUpHandler, IPointerDownHa
             activeLine.UpdateLine(mousePos);
     }
     
+    
+    
+
+    public void RpcClear()
+    {
+        photonView.RPC("Clear",RpcTarget.All);
+    }
     [PunRPC]
     public void Clear()
     {
-        return;
-        
         foreach (Transform child in transform)
         {
             Destroy(child.gameObject);
         }
     }
+    
+    
+    
 
+    public void RpcUndo()
+    {
+        photonView.RPC("Undo",RpcTarget.All);
+    }
     [PunRPC]
     public void Undo()
     {
@@ -79,19 +80,56 @@ public class LineGenerator : MonoBehaviourPun, IPointerUpHandler, IPointerDownHa
         
         Destroy(transform.GetChild(transform.childCount - 1).gameObject);
     }
+    
+    
+    
+    
 
+    public void RpcStartLine()
+    {
+        photonView.RPC("StartLine",RpcTarget.All);
+    }
     [PunRPC]
     public void StartLine()
     {
         Line newLine = Instantiate(linePrefab, transform);
         activeLine = newLine;
     }
+    
+    
+    
+    
 
+    public void RpcEndLine()
+    {
+        photonView.RPC("EndLine",RpcTarget.All);
+    }
     [PunRPC]
     public void EndLine()
     {
         activeLine = null;
+        point = nullPoint;
     }
+    
+    
+    
+    
+
+    public void RpcUpdatePoint(Vector3 p)
+    {
+        photonView.RPC("UpdatePoint",RpcTarget.All,p);
+    }
+    [PunRPC]
+    public void UpdatePoint(Vector3 p)
+    {
+        this.point = p;
+    }
+
+    
+    
+    
+
+    
 
     public void OnPointerDown(PointerEventData eventData)
     {
@@ -101,5 +139,11 @@ public class LineGenerator : MonoBehaviourPun, IPointerUpHandler, IPointerDownHa
     public void OnPointerUp(PointerEventData eventData)
     {
         RpcEndLine();
+    }
+
+    public void OnDrag(PointerEventData eventData)
+    {
+        var mousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+        RpcUpdatePoint(mousePos);
     }
 }

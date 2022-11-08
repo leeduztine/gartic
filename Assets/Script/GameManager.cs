@@ -36,6 +36,8 @@ public class GameManager : MonoBehaviourPunCallbacks
 
     private float timeLeft;
 
+    private bool hasSubmitted = false;
+
     private KeyWordModel curKeyWord = DynamicData.nullKeyWord;
 
     public KeyWordModel CurKeyWord
@@ -48,7 +50,10 @@ public class GameManager : MonoBehaviourPunCallbacks
 
     private PlayerRole role = PlayerRole.None;
 
-    
+    public PlayerRole Role
+    {
+        get => role;
+    }
 
 
     private void Awake()
@@ -130,6 +135,8 @@ public class GameManager : MonoBehaviourPunCallbacks
             role = PlayerRole.Guesser;
             GameUI.Instance.SetUpForGuesser();
         }
+
+        hasSubmitted = false;
     }
     
     
@@ -268,11 +275,14 @@ public class GameManager : MonoBehaviourPunCallbacks
     {
         float scoreRate = timeLeft / Config.SubmitTime;
         BuffScore(PhotonNetwork.LocalPlayer.NickName, (int)(Config.BaseScore * scoreRate));
+        hasSubmitted = true;
     }
 
     public void Submit(string answer)
     {
-        if (answer.ToLower() == curKeyWord.word.ToLower() && role != PlayerRole.Drawer)
+        if (answer.ToLower() == curKeyWord.word.ToLower() 
+            && role != PlayerRole.Drawer
+            && hasSubmitted == false)
         {
             SubmitCorrectly();
             GameUI.Instance.ShowCorrectAnswerNotification();
