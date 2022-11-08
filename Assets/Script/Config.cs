@@ -1,9 +1,9 @@
 ﻿public class Config
 {
     public const float IntroTime = 0f;
-    public const float WaitingTime = 3f;
+    public const float WaitingTime = 1f;
     public const float SubmitTime = 30f;
-    public const float RelaxTime = 3f;
+    public const float RelaxTime = 1f;
 
     public const int PhaseLimit = 1;
 

@@ -311,6 +311,40 @@ public class GameManager : MonoBehaviourPunCallbacks
     
     
     
+    // ------------------ room controller ---------------------------
+    private void ResetRoomProperties()
+    {
+        PhotonNetwork.CurrentRoom.CustomProperties.Clear();
+        var list = GetRawPlayerList();
+        list.ForEach(player =>
+        {
+            player.SetCustomProperties(new Hashtable { { "score", 0 } });
+        });
+    }
+    
+    public void ReplayMatch()
+    {
+        ResetRoomProperties();
+
+        int tmp = 0;
+        if (PhotonNetwork.CurrentRoom.CustomProperties.ContainsKey("replay"))
+        {
+            tmp = (int)PhotonNetwork.CurrentRoom.CustomProperties["replay"];
+        }
+        tmp++;
+        PhotonNetwork.CurrentRoom.SetCustomProperties(new Hashtable { {"replay",tmp} });
+    }
+
+    public void ExitMatch()
+    {
+        PhotonNetwork.LeaveRoom();
+    }
+    
+    
+    
+    
+    
+    
     
     
     
@@ -339,16 +373,28 @@ public class GameManager : MonoBehaviourPunCallbacks
         {
             SyncAnswerList();
         }
+
+        if (propertiesThatChanged.ContainsKey("replay"))
+        {
+            PhotonNetwork.LoadLevel("Game");
+        }
     }
     
     public override void OnPlayerEnteredRoom(Player newPlayer)
     {
         SyncPlayerList();
+        GameUI.Instance.UpdateMasterClient();
     }
 
     public override void OnPlayerLeftRoom(Player otherPlayer)
     {
         SyncPlayerList();
+        GameUI.Instance.UpdateMasterClient();
+    }
+    
+    public override void OnLeftRoom()
+    {
+        PhotonNetwork.LoadLevel("Lobby");
     }
 }
 

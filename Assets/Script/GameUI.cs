@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using DG.Tweening;
+using ExitGames.Client.Photon;
 using Photon.Pun;
 using Sirenix.Utilities;
 using TMPro;
@@ -41,6 +42,8 @@ public class GameUI : MonoBehaviour
 
     [SerializeField] private RankItem[] rankItems;
     [SerializeField] private GameObject rank;
+
+    [SerializeField] private GameObject replayBtn;
 
     private void Awake()
     {
@@ -288,22 +291,43 @@ public class GameUI : MonoBehaviour
             .GetComponent<ScrollRect>().normalizedPosition = new Vector2(0, 0);
     }
 
+    public void UpdateMasterClient()
+    {
+        if (PhotonNetwork.IsMasterClient)
+        {
+            replayBtn.SetActive(true);
+        }
+        else
+        {
+            replayBtn.SetActive(false);
+        }
+    }
+
     public void ShowRankPanel()
     {
+        UpdateMasterClient();
+        
         rank.SetActive(true);
         var list = GameManager.Instance.GetSortedPlayerList();
-        Debug.Log(list.Count);
         for (int i = 0; i < 3; i++)
         {
+            rankItems[i].gameObject.SetActive(false);
+
             if (i < list.Count)
             {
                 rankItems[i].gameObject.SetActive(true);
                 rankItems[i].SetUp(list[i]);
             }
-            else
-            {
-                rankItems[i].gameObject.SetActive(false);
-            }
         }
+    }
+
+    public void OnClickExitBtn()
+    {
+        GameManager.Instance.ExitMatch();
+    }
+
+    public void OnClickReplayBtn()
+    {
+        GameManager.Instance.ReplayMatch();
     }
 }
