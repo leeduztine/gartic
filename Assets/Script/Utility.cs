@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using DG.Tweening;
 using Photon.Realtime;
 using Sirenix.OdinInspector;
 using UnityEngine;
@@ -83,6 +84,44 @@ public class Utility : MonoBehaviour
             > 0 => 1,
             _ => 0
         };
+    }
+    
+    public void EnablePopup(Transform obj, bool isActive)
+    {
+        if (!obj.GetComponent<CanvasGroup>())
+            obj.gameObject.AddComponent<CanvasGroup>();
+
+        var cg = obj.GetComponent<CanvasGroup>();
+        
+        if (isActive)
+        {
+            Sequence seq = DOTween.Sequence();
+            seq.Append(obj.DOScale(Vector3.one * 1.2f, 0.1f))
+                .Append(obj.DOScale(Vector3.one * 1f, 0.2f))
+                .Insert(0f,cg.DOFade(1f,0.3f))
+                .InsertCallback(0f, () =>
+                {
+                    obj.gameObject.SetActive(true);
+                    obj.localScale = Vector3.one * 0.1f;
+                    cg.alpha = 0f;
+                });
+        }
+        else
+        {
+            Sequence seq = DOTween.Sequence();
+            seq.Append(obj.DOScale(Vector3.one * 1.2f, 0.1f))
+                .Append(obj.DOScale(Vector3.one * 0.1f, 0.2f))
+                .Insert(0f,cg.DOFade(0f,0.3f))
+                .InsertCallback(0f, () =>
+                {
+                    obj.localScale = Vector3.one * 1f;
+                    cg.alpha = 1f;
+                })
+                .AppendCallback(() =>
+                {
+                    obj.gameObject.SetActive(true);
+                });
+        }
     }
 }
 

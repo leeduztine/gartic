@@ -36,7 +36,14 @@ public class LobbyUI : MonoBehaviour
     [SerializeField] private Transform playerItmContainer;
 
     [SerializeField] private GameObject startBtn;
-
+    
+    // popups
+    [SerializeField] private Transform createPopup;
+    [SerializeField] private Transform joinPopup;
+    [SerializeField] private Button openCreate;
+    [SerializeField] private Button openJoin;
+    [SerializeField] private Button closeCreate;
+    [SerializeField] private Button closeJoin;
     private void Awake()
     {
         if (instance == null)
@@ -46,6 +53,15 @@ public class LobbyUI : MonoBehaviour
 
         ClearRoomList();
         ClearPlayerList();
+        
+        openCreate.onClick.RemoveAllListeners();
+        openCreate.onClick.AddListener(()=>{Utility.Instance.EnablePopup(createPopup,true);});
+        openJoin.onClick.RemoveAllListeners();
+        openJoin.onClick.AddListener(()=>Utility.Instance.EnablePopup(joinPopup,true));
+        closeCreate.onClick.RemoveAllListeners();
+        closeCreate.onClick.AddListener(()=>Utility.Instance.EnablePopup(createPopup,false));
+        closeJoin.onClick.RemoveAllListeners();
+        closeJoin.onClick.AddListener(()=>Utility.Instance.EnablePopup(joinPopup,false));
     }
 
     private void Start()
