@@ -74,6 +74,19 @@ public class GameManager : MonoBehaviourPunCallbacks
         SyncPlayerList();
         turnLimit = turnQueue.Count * Config.PhaseLimit;
         GameUI.Instance.SetUpIntro();
+
+        if (PhotonNetwork.CurrentRoom.CustomProperties.ContainsKey("customKeywords"))
+        {
+            Debug.Log("custom keywords");
+            
+            string[] list = PhotonNetwork.CurrentRoom.CustomProperties["customKeywords"]
+                .ToString().Split('\n');
+            DynamicData.Instance.SetUpKeyWordList(list);
+        }
+        else
+        {
+            Debug.Log("default keywords");
+        }
     }
 
     private void Update()

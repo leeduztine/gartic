@@ -1,10 +1,13 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using ExitGames.Client.Photon;
 using Photon.Pun;
 using Photon.Realtime;
+using Sirenix.Utilities;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using Hashtable = ExitGames.Client.Photon.Hashtable;
 
 public class LobbyManager : MonoBehaviourPunCallbacks
 {
@@ -59,6 +62,15 @@ public class LobbyManager : MonoBehaviourPunCallbacks
     public override void OnCreatedRoom()
     {
         Debug.Log($"Photon:: create room '{PhotonNetwork.CurrentRoom.Name}': successful ");
+        if (!LobbyUI.Instance.customKeywordSet.IsNullOrWhitespace())
+        {
+            Debug.Log("set custom keywords");
+            
+            PhotonNetwork.CurrentRoom.SetCustomProperties(new Hashtable
+            {
+                {"customKeywords",LobbyUI.Instance.customKeywordSet}
+            });
+        }
     }
 
     public override void OnJoinedRoom()

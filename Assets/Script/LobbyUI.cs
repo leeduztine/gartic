@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using DG.Tweening;
+using ExitGames.Client.Photon;
 using Photon.Pun;
 using Photon.Realtime;
 using Sirenix.OdinInspector;
@@ -242,12 +243,24 @@ public class LobbyUI : MonoBehaviour
 
     private string path;
 
-    private string customKeywordSet;
+    public string customKeywordSet = null;
 
     public void BrowseFile()
     {
-        // path = EditorUtility.OpenFilePanel("Select custom Keywords set file", "", "txt");
-        // StartCoroutine(ReadFileTxt());
+        string type = NativeFilePicker.ConvertExtensionToFileType("txt");
+        
+        NativeFilePicker.Permission permission = NativeFilePicker.PickFile((p) =>
+        {
+            if (p == null)
+            {
+                Debug.Log("Operation cancelled");
+            }
+            else
+            {
+                path = p;
+                StartCoroutine(ReadFileTxt());
+            }
+        },new string[] {type});
     }
 
     IEnumerator ReadFileTxt()
@@ -263,7 +276,12 @@ public class LobbyUI : MonoBehaviour
             }
             else
             {
-                Debug.Log(uwr.downloadHandler.text);
+                var result = uwr.downloadHandler.text;
+                Debug.Log(result);
+                customKeywordSet = result;
+
+                // string[] list = result.Split('\n');
+                // foreach (var itm in list) Debug.Log(itm);
             }
         }
     }
