@@ -370,6 +370,7 @@ GameObject:
   m_Component:
   - component: {fileID: 72555967}
   - component: {fileID: 72555968}
+  - component: {fileID: 72555969}
   m_Layer: 5
   m_Name: player 2
   m_TagString: Untagged
@@ -415,6 +416,26 @@ MonoBehaviour:
   avt: {fileID: 1960195934}
   username: {fileID: 391527069}
   score: {fileID: 818376941}
+--- !u!95 &72555969
+Animator:
+  serializedVersion: 4
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 72555966}
+  m_Enabled: 1
+  m_Avatar: {fileID: 0}
+  m_Controller: {fileID: 9100000, guid: feb7dcd09ddd59641ad293137839a833, type: 2}
+  m_CullingMode: 0
+  m_UpdateMode: 0
+  m_ApplyRootMotion: 0
+  m_LinearVelocityBlending: 0
+  m_StabilizeFeet: 0
+  m_WarningMessage: 
+  m_HasTransformHierarchy: 1
+  m_AllowConstantClipSamplingOptimization: 1
+  m_KeepAnimatorControllerStateOnDisable: 0
 --- !u!1 &105311624
 GameObject:
   m_ObjectHideFlags: 0
@@ -3523,6 +3544,7 @@ GameObject:
   m_Component:
   - component: {fileID: 821388343}
   - component: {fileID: 821388344}
+  - component: {fileID: 821388345}
   m_Layer: 5
   m_Name: player 1
   m_TagString: Untagged
@@ -3568,6 +3590,26 @@ MonoBehaviour:
   avt: {fileID: 1485117551}
   username: {fileID: 1417335550}
   score: {fileID: 1106949825}
+--- !u!95 &821388345
+Animator:
+  serializedVersion: 4
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 821388342}
+  m_Enabled: 1
+  m_Avatar: {fileID: 0}
+  m_Controller: {fileID: 9100000, guid: 94287d6d2f4e7464a933d37632a06280, type: 2}
+  m_CullingMode: 0
+  m_UpdateMode: 0
+  m_ApplyRootMotion: 0
+  m_LinearVelocityBlending: 0
+  m_StabilizeFeet: 0
+  m_WarningMessage: 
+  m_HasTransformHierarchy: 1
+  m_AllowConstantClipSamplingOptimization: 1
+  m_KeepAnimatorControllerStateOnDisable: 0
 --- !u!1 &933655491
 GameObject:
   m_ObjectHideFlags: 0
@@ -3948,6 +3990,7 @@ GameObject:
   m_Component:
   - component: {fileID: 981052015}
   - component: {fileID: 981052016}
+  - component: {fileID: 981052017}
   m_Layer: 5
   m_Name: player 3
   m_TagString: Untagged
@@ -3993,6 +4036,26 @@ MonoBehaviour:
   avt: {fileID: 1094283685}
   username: {fileID: 734933291}
   score: {fileID: 1671845149}
+--- !u!95 &981052017
+Animator:
+  serializedVersion: 4
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 981052014}
+  m_Enabled: 1
+  m_Avatar: {fileID: 0}
+  m_Controller: {fileID: 9100000, guid: 945dbf42fe2532c46946d4e8697fda99, type: 2}
+  m_CullingMode: 0
+  m_UpdateMode: 0
+  m_ApplyRootMotion: 0
+  m_LinearVelocityBlending: 0
+  m_StabilizeFeet: 0
+  m_WarningMessage: 
+  m_HasTransformHierarchy: 1
+  m_AllowConstantClipSamplingOptimization: 1
+  m_KeepAnimatorControllerStateOnDisable: 0
 --- !u!1 &992274594
 GameObject:
   m_ObjectHideFlags: 0

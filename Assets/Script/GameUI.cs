@@ -268,7 +268,7 @@ public class GameUI : MonoBehaviour
 
     public void ShowWrongAnswer(string username, string answer)
     {
-        PushIntoAnswerList($"<color=#4d7796>{username} :</color> {answer}");
+        PushIntoAnswerList($"  <color=#4d7796>{username} :</color> {answer}");
     }
 
     public void ShowCorrectAnswerNotification()
