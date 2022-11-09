@@ -7,7 +7,9 @@ using Photon.Realtime;
 using Sirenix.OdinInspector;
 using Sirenix.Utilities;
 using TMPro;
+using UnityEditor;
 using UnityEngine;
+using UnityEngine.Networking;
 using UnityEngine.UI;
 
 public class LobbyUI : MonoBehaviour
@@ -44,6 +46,13 @@ public class LobbyUI : MonoBehaviour
     [SerializeField] private Button openJoin;
     [SerializeField] private Button closeCreate;
     [SerializeField] private Button closeJoin;
+    
+    // room options
+    [SerializeField] private Button selectDefaultBtn;
+    [SerializeField] private Button selectCustomBtn;
+    [SerializeField] private OptionItem defaultOpt;
+    [SerializeField] private OptionItem customOpt;
+    [SerializeField] private Button browseFileBtn;
     private void Awake()
     {
         if (instance == null)
@@ -62,6 +71,27 @@ public class LobbyUI : MonoBehaviour
         closeCreate.onClick.AddListener(()=>Utility.Instance.EnablePopup(createPopup,false));
         closeJoin.onClick.RemoveAllListeners();
         closeJoin.onClick.AddListener(()=>Utility.Instance.EnablePopup(joinPopup,false));
+        
+        selectDefaultBtn.onClick.RemoveAllListeners();
+        selectDefaultBtn.onClick.AddListener(() =>
+        {
+            defaultOpt.Select();
+            customOpt.Unselect();
+            browseFileBtn.gameObject.SetActive(false);
+        });
+        
+        selectCustomBtn.onClick.RemoveAllListeners();
+        selectCustomBtn.onClick.AddListener(() =>
+        {
+            customOpt.Select();
+            defaultOpt.Unselect();
+            browseFileBtn.gameObject.SetActive(true);
+        });
+        
+        selectDefaultBtn.onClick.Invoke();
+        
+        browseFileBtn.onClick.RemoveAllListeners();
+        browseFileBtn.onClick.AddListener(BrowseFile);
     }
 
     private void Start()
@@ -207,6 +237,34 @@ public class LobbyUI : MonoBehaviour
         foreach (Transform child in playerItmContainer)
         {
             Destroy(child.gameObject);
+        }
+    }
+
+    private string path;
+
+    private string customKeywordSet;
+
+    public void BrowseFile()
+    {
+        // path = EditorUtility.OpenFilePanel("Select custom Keywords set file", "", "txt");
+        // StartCoroutine(ReadFileTxt());
+    }
+
+    IEnumerator ReadFileTxt()
+    {
+        if (path != null)
+        {
+            UnityWebRequest uwr = UnityWebRequest.Get("file:///" + path);
+            yield return uwr.SendWebRequest();
+
+            if (uwr.result != UnityWebRequest.Result.Success)
+            {
+                Debug.Log(uwr.error);
+            }
+            else
+            {
+                Debug.Log(uwr.downloadHandler.text);
+            }
         }
     }
 }
